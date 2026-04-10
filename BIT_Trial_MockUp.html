@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GridironBet</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#1a1f2e;min-height:100vh;color:#fff}
+:root{
+  --navy:#1a1f2e;--navy2:#252b3b;--navy3:#2e3550;
+  --accent:#1493ff;--gold:#f0b429;--muted:#8a93a8;
+  --border:#333d54;--green:#00c853;--white:#ffffff;
+}
+input[type=number]{outline:none}
+input[type=number]::-webkit-inner-spin-button{opacity:1}
+button:active{opacity:0.85}
+.pill{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:transparent;white-space:nowrap}
+.pill.active{background:var(--accent);color:#fff;border:none}
+.odds-badge{border-radius:6px;padding:3px 8px;min-width:44px;text-align:center;font-size:12px;font-weight:500}
+.odds-pos{background:rgba(0,200,83,0.12);border:1px solid rgba(0,200,83,0.3);color:var(--green)}
+.odds-neg{background:rgba(20,147,255,0.12);border:1px solid rgba(20,147,255,0.3);color:var(--accent)}
+</style>
+</head>
+<body>
+
+<div style="max-width:480px;margin:0 auto;position:relative">
+  <div style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;display:flex;align-items:center;justify-content:center;overflow:hidden">
+    <div style="font-size:72px;font-weight:700;color:rgba(255,255,255,0.06);letter-spacing:0.1em;transform:rotate(-35deg);white-space:nowrap;user-select:none">PROTOTYPE</div>
+  </div>
+
+  <div style="background:var(--navy2);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="width:26px;height:26px;border-radius:6px;background:var(--accent);display:flex;align-items:center;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span style="font-size:15px;font-weight:500">GridironBet</span>
+    </div>
+    <div style="background:var(--navy3);border-radius:16px;padding:3px 10px;font-size:12px;color:var(--gold);font-weight:500;border:1px solid var(--border)">$1,000.00</div>
+  </div>
+
+  <div style="background:var(--navy3);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:6px;overflow-x:auto">
+    <button class="pill active">NFL</button>
+    <button class="pill">NBA</button>
+    <button class="pill">MLB</button>
+    <button class="pill">NHL</button>
+    <button class="pill">Soccer</button>
+  </div>
+
+  <div style="padding:10px 12px 4px;display:flex;align-items:center;gap:6px">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><ellipse cx="12" cy="12" rx="10" ry="6.5" stroke="#8a93a8" stroke-width="1.5"/><line x1="2" y1="12" x2="22" y2="12" stroke="#8a93a8" stroke-width="1.5"/><line x1="12" y1="5.5" x2="12" y2="18.5" stroke="#8a93a8" stroke-width="1.5"/></svg>
+    <span style="color:var(--muted);font-size:11px;letter-spacing:0.05em;text-transform:uppercase">Week 14 · Sun, Dec 8</span>
+  </div>
+
+  <div id="bet-list" style="padding:4px 10px 16px"></div>
+  <div id="slip-container"></div>
+
+</div>
+
+<script>
+const BETS = [
+  {id:1,label:"Straight",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140}
+  ]},
+  {id:2,label:"2-leg parlay",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140},
+    {home:"Lakeside Lions",away:"Pinewood Panthers",pick:"Lakeside Lions",odds:160}
+  ]},
+  {id:3,label:"3-leg parlay",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140},
+    {home:"Lakeside Lions",away:"Pinewood Panthers",pick:"Lakeside Lions",odds:160},
+    {home:"Ironvale Wolves",away:"Clearfield Falcons",pick:"Clearfield Falcons",odds:-115}
+  ]},
+  {id:4,label:"4-leg parlay",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140},
+    {home:"Lakeside Lions",away:"Pinewood Panthers",pick:"Lakeside Lions",odds:160},
+    {home:"Ironvale Wolves",away:"Clearfield Falcons",pick:"Clearfield Falcons",odds:-115},
+    {home:"Stonebridge Sharks",away:"Maplewood Mustangs",pick:"Stonebridge Sharks",odds:-150}
+  ]},
+  {id:5,label:"5-leg parlay",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140},
+    {home:"Lakeside Lions",away:"Pinewood Panthers",pick:"Lakeside Lions",odds:160},
+    {home:"Ironvale Wolves",away:"Clearfield Falcons",pick:"Clearfield Falcons",odds:-115},
+    {home:"Stonebridge Sharks",away:"Maplewood Mustangs",pick:"Stonebridge Sharks",odds:-150},
+    {home:"Riverside Raptors",away:"Hillcrest Hawks",pick:"Riverside Raptors",odds:130}
+  ]},
+  {id:6,label:"6-leg parlay",legs:[
+    {home:"Redwood Rams",away:"Crestview Eagles",pick:"Redwood Rams",odds:-140},
+    {home:"Lakeside Lions",away:"Pinewood Panthers",pick:"Lakeside Lions",odds:160},
+    {home:"Ironvale Wolves",away:"Clearfield Falcons",pick:"Clearfield Falcons",odds:-115},
+    {home:"Stonebridge Sharks",away:"Maplewood Mustangs",pick:"Stonebridge Sharks",odds:-150},
+    {home:"Riverside Raptors",away:"Hillcrest Hawks",pick:"Riverside Raptors",odds:130},
+    {home:"Ashford Titans",away:"Bayside Broncos",pick:"Bayside Broncos",odds:200}
+  ]}
+];
+
+const order = [...BETS].sort(()=>Math.random()-0.5);
+
+let selectedId = null;
+let wager = 10;
+let confirmed = false;
+let slipOpen = false;
+
+function fmtOdds(o){ return o>0?`+${o}`:`${o}`; }
+
+function parlayOdds(legs){
+  const dec = legs.reduce((a,l)=>a*(l.odds>0?l.odds/100+1:100/Math.abs(l.odds)+1),1);
+  const am = dec>=2?Math.round((dec-1)*100):Math.round(-100/(dec-1));
+  return am>0?`+${am}`:`${am}`;
+}
+
+function toWin(legs,w){
+  const dec = legs.reduce((a,l)=>a*(l.odds>0?l.odds/100+1:100/Math.abs(l.odds)+1),1);
+  return ((dec-1)*w).toFixed(2);
+}
+
+function totalPayout(legs,w){
+  const dec = legs.reduce((a,l)=>a*(l.odds>0?l.odds/100+1:100/Math.abs(l.odds)+1),1);
+  return (dec*w).toFixed(2);
+}
+
+function renderBets(){
+  const list = document.getElementById('bet-list');
+  list.innerHTML = order.map(b=>{
+    const isSel = selectedId===b.id;
+    const isParlay = b.legs.length>1;
+    const legsHtml = b.legs.map((l,i)=>{
+      const opp = l.pick===l.home?l.away:l.home;
+      const bg = i%2===0?'transparent':'rgba(255,255,255,0.02)';
+      const cls = l.odds>0?'odds-pos':'odds-neg';
+      const border = i>0?`border-top:1px solid var(--border);`:'';
+      return `<div style="padding:7px 12px;${border}display:flex;justify-content:space-between;align-items:center;background:${bg}">
+        <div style="flex:1;min-width:0;padding-right:8px">
+          <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.pick}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:1px">ML · vs ${opp}</div>
+        </div>
+        <div class="odds-badge ${cls}">${fmtOdds(l.odds)}</div>
+      </div>`;
+    }).join('');
+
+    const parlayBadge = isParlay?`<div style="background:#1a3a5c;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:500;color:var(--accent);border:1px solid #1e4d7a">PARLAY</div>`:'';
+    const parlayOddsEl = isParlay?`<span style="color:var(--gold);font-weight:500;font-size:13px">${parlayOdds(b.legs)}</span>`:'';
+    const actionBtn = isSel
+      ? `<div style="display:flex;align-items:center;gap:4px;background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.3);border-radius:6px;padding:5px 10px">
+           <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#00c853" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+           <span style="font-size:11px;font-weight:500;color:var(--green)">Added</span>
+         </div>`
+      : `<button onclick="addBet(${b.id})" style="background:var(--accent);border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:500;color:#fff;cursor:pointer">Add to slip</button>`;
+
+    const selBorder = isSel?'var(--accent)':'var(--border)';
+    return `<div style="background:var(--navy2);border:1px solid ${selBorder};border-radius:12px;margin-bottom:8px;overflow:hidden">
+      <div style="padding:9px 12px 7px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:6px">${parlayBadge}<span style="font-size:13px;font-weight:500">${b.label}</span></div>
+        ${parlayOddsEl}
+      </div>
+      ${legsHtml}
+      <div style="padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end">${actionBtn}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderSlip(){
+  const sc = document.getElementById('slip-container');
+  const bet = BETS.find(b=>b.id===selectedId);
+  if(!bet){ sc.innerHTML=''; return; }
+
+  if(!slipOpen){
+    sc.innerHTML=`<div style="padding:0 10px 16px">
+      <button onclick="setSlipOpen(true)" style="width:100%;background:var(--accent);border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:500;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px">
+        <div style="background:rgba(255,255,255,0.25);border-radius:10px;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500">1</div>
+        View bet slip
+      </button>
+    </div>`;
+    return;
+  }
+
+  const w = parseFloat(wager)||0;
+  const win = toWin(bet.legs,w);
+  const payout = totalPayout(bet.legs,w);
+  const isParlay = bet.legs.length>1;
+
+  const legsHtml = bet.legs.map((l,i)=>{
+    const cls = l.odds>0?'var(--green)':'var(--accent)';
+    const border = i>0?'border-top:1px solid var(--border);':'';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:3px 0;${border}">
+      <span style="font-size:11px">${l.pick}</span>
+      <span style="font-size:11px;font-weight:500;color:${cls}">${fmtOdds(l.odds)}</span>
+    </div>`;
+  }).join('');
+
+  const parlayOddsEl = isParlay?`<span style="color:var(--gold);font-weight:500;font-size:12px">${parlayOdds(bet.legs)}</span>`:'';
+
+  const actionEl = confirmed
+    ? `<div style="background:rgba(0,200,83,0.1);border:1px solid rgba(0,200,83,0.4);border-radius:8px;padding:11px;text-align:center">
+         <div style="color:var(--green);font-weight:500;font-size:13px;margin-bottom:2px">Bet confirmed</div>
+         <div style="color:var(--muted);font-size:11px">Good luck!</div>
+       </div>`
+    : `<button onclick="placeBet()" style="width:100%;background:var(--accent);border:none;border-radius:8px;padding:11px;font-size:14px;font-weight:500;color:#fff;cursor:pointer">Place bet · $${wager||'0'}</button>`;
+
+  sc.innerHTML=`<div style="background:var(--navy2);border-top:2px solid var(--accent);padding:14px 12px 20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:14px;font-weight:500">Bet slip</span>
+      <button onclick="clearSlip()" style="background:transparent;border:1px solid var(--border);border-radius:6px;padding:2px 8px;font-size:11px;color:var(--muted);cursor:pointer">Clear</button>
+    </div>
+    <div style="background:var(--navy3);border-radius:8px;padding:9px 10px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.04em">${bet.label}</span>
+        ${parlayOddsEl}
+      </div>
+      ${legsHtml}
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <div style="flex:1;position:relative">
+        <span style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px">$</span>
+        <input type="number" min="1" value="${wager}" oninput="updateWager(this.value)" style="width:100%;background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:8px 8px 8px 22px;font-size:14px;color:#fff"/>
+      </div>
+      <div style="background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:6px 12px;text-align:right;flex-shrink:0">
+        <div style="font-size:10px;color:var(--muted);margin-bottom:2px">To win</div>
+        <div style="font-size:14px;font-weight:500;color:var(--green)">$${win}</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:10px;padding:7px 10px;background:var(--navy3);border-radius:8px">
+      <span style="font-size:12px;color:var(--muted)">Total payout</span>
+      <span style="font-size:13px;font-weight:500">$${payout}</span>
+    </div>
+    ${actionEl}
+  </div>`;
+}
+
+function render(){ renderBets(); renderSlip(); }
+
+function addBet(id){ selectedId=id; confirmed=false; slipOpen=true; render(); }
+function clearSlip(){ selectedId=null; confirmed=false; wager=10; slipOpen=false; render(); }
+function setSlipOpen(v){ slipOpen=v; render(); }
+function updateWager(v){ wager=v; confirmed=false; renderSlip(); }
+function placeBet(){ confirmed=true; renderSlip(); }
+
+render();
+</script>
+</body>
+</html>
